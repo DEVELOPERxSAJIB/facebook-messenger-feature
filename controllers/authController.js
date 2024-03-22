@@ -2,6 +2,8 @@ import asyncHandler from "express-async-handler";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+import { createOTP, isEmail, isMobile } from "../client/src/helpers/helpers.js";
+import { accoutActivationEmail } from "../mails/accountAcctivationEmail.js";
 
 /**
  * @DESC User Login
@@ -80,17 +82,49 @@ export const logout = asyncHandler(async (req, res) => {
  * @access public
  */
 export const register = asyncHandler(async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, auth, password } = req.body;
 
-  if (!name || !email || !password) {
+  if (!name || !auth || !password) {
     return res.status(400).json({ message: "All fields are required" });
   }
 
-  // check user email
-  const userEmailCheck = await User.findOne({ email });
+  // Check email or Phone Number
+  let authEmail = null;
+  let authPhone = null;
 
-  if (userEmailCheck) {
-    return res.status(400).json({ message: "Email already exists" });
+  // create access token for account activation
+  const activationCode = createOTP()
+
+  if (isMobile(auth)) {
+    authPhone = auth;
+
+    // check user Phone exists or not
+    const userPhoneCheck = await User.findOne({ phone: authPhone });
+    if (userPhoneCheck) {
+      return res.status(400).json({ message: "Phone number already exists" });
+    }
+  } else if (isEmail(auth)) {
+    authEmail = auth;
+
+    // check user email exists or not
+    const userEmailCheck = await User.findOne({ email: authEmail });
+    if (userEmailCheck) {
+      return res.status(400).json({ message: "Email already exists" });
+    }
+
+    // send actiovation email
+    const emailOptions = {
+      email : auth,
+      subject : "Account activation email",
+      code : activationCode,
+      name : name,
+    }
+    await accoutActivationEmail(emailOptions)
+
+  } else {
+    return res.status(400).json({
+      message: "Please enter a phone number or email address for registration",
+    });
   }
 
   // password hash
@@ -99,8 +133,10 @@ export const register = asyncHandler(async (req, res) => {
   // create new user
   const user = await User.create({
     name,
-    email,
+    phone: authPhone,
+    email: authEmail,
     password: hashPass,
+    accessToken : activationCode,
   });
 
   res.status(200).json({

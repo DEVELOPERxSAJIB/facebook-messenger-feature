@@ -15,6 +15,7 @@ const authSlice = createSlice({
       : null,
     message: null,
     error: null,
+    loader : false
   },
   reducers: {
     setMessageEmpty: (state) => {
@@ -29,11 +30,16 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(createUser.rejected, (state, action) => {
-        state.error = action.error.message;
+      .addCase(createUser.pending, (state) => {
+        state.loader = true
       })
       .addCase(createUser.fulfilled, (state, action) => {
         state.message = action.payload.message;
+        state.loader = false
+      })
+      .addCase(createUser.rejected, (state, action) => {
+        state.error = action.error.message;
+        state.loader = false
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.error = action.error.message;
@@ -63,6 +69,7 @@ const authSlice = createSlice({
 
 // selectors
 export const getAuthData = (state) => state.auth;
+
 // actions
 export const { setMessageEmpty, setLogout } = authSlice.actions;
 

@@ -2,7 +2,10 @@ import { RouterProvider } from "react-router-dom";
 import "./App.scss";
 import router from "./router/router";
 import { ToastContainer } from "react-toastify";
+import { ReactNotifications } from 'react-notifications-component'
 import "react-toastify/dist/ReactToastify.css";
+import 'react-notifications-component/dist/theme.css'
+
 
 function App() {
   return (
@@ -17,6 +20,7 @@ function App() {
         draggable
         theme="light"
       />
+      <ReactNotifications />
       <RouterProvider router={router} />
     </>
   );

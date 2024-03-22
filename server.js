@@ -30,7 +30,6 @@ const PORT = process.env.PORT || 9090;
 app.use(express.static("public"));
 
 // routing
-app.use("/api/v1/user", userRouter);
 app.use("/api/v1/auth", authRouter);
 
 // use error handler
