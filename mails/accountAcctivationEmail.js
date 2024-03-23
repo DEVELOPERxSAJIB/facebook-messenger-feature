@@ -201,7 +201,7 @@ export const accoutActivationEmail = async (options) => {
             <!--[if mso]><style>.v-button {background: transparent !important;}</style><![endif]-->
             <div align="center">
             <!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="" style="height:39px; v-text-anchor:middle; width:480px;" arcsize="10.5%"  stroke="f" fillcolor="#0b98d4"><w:anchorlock/><center style="color:#FFFFFF;"><![endif]-->
-                <a href="" target="_blank" class="v-button" style="box-sizing: border-box;display: inline-block;text-decoration: none;-webkit-text-size-adjust: none;text-align: center;color: #FFFFFF; background-color: #0b98d4; border-radius: 4px;-webkit-border-radius: 4px; -moz-border-radius: 4px; width:100%; max-width:100%; overflow-wrap: break-word; word-break: break-word; word-wrap:break-word; mso-border-alt: none;font-size: 16px;">
+                <a href=${options.activationLink} target="_blank" class="v-button" style="box-sizing: border-box;display: inline-block;text-decoration: none;-webkit-text-size-adjust: none;text-align: center;color: #FFFFFF; background-color: #0b98d4; border-radius: 4px;-webkit-border-radius: 4px; -moz-border-radius: 4px; width:100%; max-width:100%; overflow-wrap: break-word; word-break: break-word; word-wrap:break-word; mso-border-alt: none;font-size: 16px;">
                 <span style="display:block;padding:10px 20px;line-height:120%;"><span style="line-height: 16.8px;">Activate Account Now</span></span>
                 </a>
                 <!--[if mso]></center></v:roundrect><![endif]-->

@@ -10,7 +10,7 @@ const AuthHeader = ({ title, desc }) => {
         />
       </Link>
       <h1>{title}</h1>
-      <p>{desc}</p>
+      <p style={{maxWidth: "700px"}} dangerouslySetInnerHTML={{ __html: desc }} />
     </div>
   );
 };

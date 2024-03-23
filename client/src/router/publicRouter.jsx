@@ -4,6 +4,8 @@ import Login from "../pages/auth/Login";
 import Profile from "../pages/auth/Profile";
 import Register from "../pages/auth/Register";
 import Reset from "../pages/auth/Reset";
+import { Activation } from "../pages/auth/Activation";
+import { Verifying } from "../pages/auth/Verifying";
 
 // create public router
 const publicRouter = [
@@ -34,6 +36,14 @@ const publicRouter = [
   {
     path: "/reset",
     element: <Reset />,
+  },
+  {
+    path: "/activation",
+    element: <Activation />,
+  },
+  {
+    path: "/activation/:token",
+    element: <Verifying />,
   },
 ];
 

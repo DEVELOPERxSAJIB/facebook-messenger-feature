@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import AuthHeader from "../../components/AuthHeader/AuthHeader";
 import PageHeader from "../../components/PageHeader/PageHeader";
 import useFormFields from "../../hooks/useFormFields";
@@ -11,6 +11,7 @@ import MainLoader from "../../components/MainLoader/MainLoader";
 
 const Register = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate()
   const { message, error, loader } = useSelector(getAuthData);
 
   const { input, handleInputChange, resetForm } = useFormFields({
@@ -23,7 +24,6 @@ const Register = () => {
     e.preventDefault();
 
     dispatch(createUser(input));
-    resetForm();
   };
 
   useEffect(() => {
@@ -35,8 +35,10 @@ const Register = () => {
     if (message) {
       createNotify({ title: message, msg: "", type: "success" });
       dispatch(setMessageEmpty());
+      resetForm();
+      navigate("/activation")
     }
-  }, [dispatch, error, message]);
+  }, [dispatch, error, message, navigate, resetForm]);
 
   return (
     <>

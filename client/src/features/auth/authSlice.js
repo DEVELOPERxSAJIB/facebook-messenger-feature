@@ -1,5 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import {
+  activateUserByOTP,
   createUser,
   getLoggedInUser,
   loginUser,
@@ -38,6 +39,17 @@ const authSlice = createSlice({
         state.loader = false
       })
       .addCase(createUser.rejected, (state, action) => {
+        state.error = action.error.message;
+        state.loader = false
+      })
+      .addCase(activateUserByOTP.pending, (state) => {
+        state.loader = true
+      })
+      .addCase(activateUserByOTP.fulfilled, (state, action) => {
+        state.message = action.payload.message;
+        state.loader = false
+      })
+      .addCase(activateUserByOTP.rejected, (state, action) => {
         state.error = action.error.message;
         state.loader = false
       })

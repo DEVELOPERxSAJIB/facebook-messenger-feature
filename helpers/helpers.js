@@ -54,7 +54,7 @@ export const randStr = (length = 12) => {
  */
 export const dotsToHyphens = (inputString) => {
   // Use the replace method with a regular expression to replace dots with hyphens
-  const stringWithHyphens = inputString.replace(/\./g, "asrafulhaq");
+  const stringWithHyphens = inputString.replace(/\./g, "hyphentodotconvertion");
   return stringWithHyphens;
 };
 
@@ -63,7 +63,7 @@ export const dotsToHyphens = (inputString) => {
  */
 export const hyphensToDots = (inputString) => {
   // Use the replace method with a regular expression to replace hyphens with dots
-  const stringWithDots = inputString.replace(/asrafulhaq/g, ".");
+  const stringWithDots = inputString.replace(/hyphentodotconvertion/g, ".");
   return stringWithDots;
 };
 
