@@ -38,6 +38,25 @@ export const activateUserByOTP = createAsyncThunk(
   }
 );
 
+// activate user with Link
+export const activateUserByLink = createAsyncThunk(
+  "auth/activateUserByLink",
+  async (data) => {
+    try {
+      const response = await axios.post(
+        `http://localhost:5050/api/v1/auth/activate-user-by-link/${data}`,
+        {
+          withCredentials: true,
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response.data.message);
+    }
+  }
+);
+
 // Login user
 export const loginUser = createAsyncThunk("auth/loginUser", async (data) => {
   try {

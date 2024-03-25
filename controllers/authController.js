@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import { createOTP, isEmail, isMobile } from "../client/src/helpers/helpers.js";
 import { accoutActivationEmail } from "../mails/accountAcctivationEmail.js";
-import { dotsToHyphens } from "../helpers/helpers.js";
+import { dotsToHyphens, hyphensToDots } from "../helpers/helpers.js";
 
 /**
  * @DESC User Login
@@ -13,42 +13,44 @@ import { dotsToHyphens } from "../helpers/helpers.js";
  * @access public
  */
 export const login = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
+  const { auth, password } = req.body;
 
   // validation
-  if (!email || !password)
+  if (!auth || !password)
     return res.status(404).json({ message: "All fields are required" });
 
-  // find login user by email
-  const loginUser = await User.findOne({ email }).populate("role");
+  // default authUser
+  let loginUserData = null;
 
-  // user not found
-  if (!loginUser) return res.status(404).json({ message: "User not found" });
+  if (isMobile(auth)) {
+    loginUserData = await User.findOne({ phone: auth });
+
+    if (!loginUserData) {
+      return res.status(400).json({ message: "Invalid phone number" });
+    }
+  } else if (isEmail(auth)) {
+    loginUserData = await User.findOne({ email: auth });
+
+    if (!loginUserData) {
+      return res.status(400).json({ message: "Invalid email address" });
+    }
+  } else {
+    return res
+      .status(400)
+      .json({ message: "Invalid request. Try again later" });
+  }
 
   // password check
-  const passwordCheck = await bcrypt.compare(password, loginUser.password);
+  const passwordCheck = await bcrypt.compare(password, loginUserData.password);
 
   // password check
   if (!passwordCheck)
     return res.status(404).json({ message: "Wrong password" });
 
   // create access token
-  const token = jwt.sign(
-    { email: loginUser.email },
-    process.env.ACCESS_TOKEN_SECRET,
-    {
-      expiresIn: process.env.ACCESS_TOKEN_EXPIRE_IN,
-    }
-  );
-
-  // create Refresh token
-  const refreshToken = jwt.sign(
-    { email: loginUser.email },
-    process.env.REFRESH_TOKEN_SECRET,
-    {
-      expiresIn: process.env.REFRESH_TOKEN_EXPIRE_IN,
-    }
-  );
+  const token = jwt.sign({ auth: auth }, process.env.ACCESS_TOKEN_SECRET, {
+    expiresIn: process.env.ACCESS_TOKEN_EXPIRE_IN,
+  });
 
   res.cookie("accessToken", token, {
     httpOnly: true,
@@ -59,8 +61,7 @@ export const login = asyncHandler(async (req, res) => {
   });
 
   res.status(200).json({
-    token,
-    user: loginUser,
+    user: loginUserData,
     message: "User Login Successful",
   });
 });
@@ -181,51 +182,112 @@ export const activateUserByOTP = async (req, res) => {
   const { token, otp } = req.body;
 
   if (!token) {
-    return res.status(400).json({ message: "Can't find token" });
+    return res.status(400).json({ message: "Token not found" });
   }
   if (!otp) {
     return res.status(400).json({ message: "OTP is required" });
   }
 
-  // verify token data
-  const { atuh } = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-  console.log(atuh);
+  // server acceptable token
+  const serverAcceptableToken = hyphensToDots(token);
 
-  // activation auth
-  let authUser = null;
+  const tokenCheck = jwt.verify(
+    serverAcceptableToken,
+    process.env.ACCESS_TOKEN_SECRET
+  );
 
-  if (isMobile(decode.atuh)) {
-    authUser = await User.findOne({ phone: decode.auth });
-    if (!authUser) {
-      return res.status(400).json({ message: "Phone number not found" });
+  if (!tokenCheck) {
+    return res.status(400).json({ message: "Invalid Activation request" });
+  }
+
+  // activate account now
+  let activateUser = null;
+
+  if (isMobile(tokenCheck.auth)) {
+    activateUser = await User.findOne({ phone: tokenCheck.auth });
+
+    if (!activateUser) {
+      return res.status(400).json({ message: "Activate user not found" });
     }
-  } else if (isEmail(decode.atuh)) {
-    authUser = await User.findOne({ email: decode.auth });
-    console.log("email", authUser);
+  } else if (isEmail(tokenCheck.auth)) {
+    activateUser = await User.findOne({ email: tokenCheck.auth });
 
-    if (!authUser) {
-      return res
-        .status(400)
-        .json({ message: "Email is not used for register" });
+    if (!activateUser) {
+      return res.status(400).json({ message: "Activate user not found" });
     }
   } else {
-    return res
-      .status(400)
-      .json({ message: "Request failed. Please try again " });
+    return res.status(400).json({ message: "Auth is undefined" });
   }
 
   // check otp
-  if (authUser.accessToken !== otp) {
-    return res.status(200).json({ message: "Wrong OTP" });
+  if (otp !== activateUser.accessToken) {
+    return res.status(400).json({ message: "Wrong OTP" });
   }
 
-  // make accesstoken null
-  authUser.accessToken = null;
-  authUser.save();
+  // set access token null
+  activateUser.accessToken = null;
+  activateUser.save();
 
-  res
+  // crear verify token
+  res.clearCookie("verifyToken");
+
+  return res
     .status(200)
-    .json({ message: "Your account has been verified. Please Login" });
+    .json({ message: "User activation successful", user: activateUser });
+};
+
+/**
+ * @DESC Activate User with Link
+ * @ROUTE /api/v1/activate-user-by-link/:token
+ * @method POST
+ * @access public
+ */
+export const activateUserByLink = async (req, res) => {
+  const { token } = req.params;
+
+  if (!token) {
+    return res.status(400).json({ message: "Token not found" });
+  }
+
+  // server acceptable token
+  const serverAcceptableToken = hyphensToDots(token);
+
+  const tokenCheck = jwt.verify(
+    serverAcceptableToken,
+    process.env.ACCESS_TOKEN_SECRET
+  );
+
+  if (!tokenCheck) {
+    return res.status(400).json({ message: "Invalid Activation request" });
+  }
+
+  // activate account now
+  let activateUser = null;
+
+  if (isEmail(tokenCheck.auth)) {
+    activateUser = await User.findOne({ email: tokenCheck.auth });
+
+    if (!activateUser) {
+      return res.status(400).json({ message: "Activate user not found" });
+    }
+
+    if (activateUser.accessToken === null) {
+      return res.status(400).json({ message: "This link already used" });
+    }
+  } else {
+    return res.status(400).json({ message: "Auth is undefined" });
+  }
+
+  // set access token null
+  activateUser.accessToken = null;
+  activateUser.save();
+
+  // crear verify token
+  res.clearCookie("verifyToken");
+
+  return res
+    .status(200)
+    .json({ message: "User activated. Please login", user: activateUser });
 };
 
 /**

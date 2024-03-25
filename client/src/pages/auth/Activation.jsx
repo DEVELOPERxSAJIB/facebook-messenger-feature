@@ -42,7 +42,7 @@ export const Activation = () => {
       createNotify({ title: message, msg: "", type: "success" });
       dispatch(setMessageEmpty());
       resetForm();
-      navigate("/activation");
+      navigate("/login");
     }
   }, [dispatch, error, message, navigate, resetForm]);
 
